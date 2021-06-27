@@ -1,5 +1,7 @@
 # docker 学习笔记
 
+![白色](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/15/095704.jpg)
+
 
 
 ## 安装
@@ -275,6 +277,62 @@ sudo systemctl restart docker
   
   ```
 
+##### docker history
+
+- docker history
+
+  ```shell
+  [akachi@AKACHI-PC-2018 dell]$ docker history mysql
+  IMAGE          CREATED       CREATED BY                                      SIZE      COMMENT
+  c0cdc95609f1   4 weeks ago   /bin/sh -c #(nop)  CMD ["mysqld"]               0B
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  EXPOSE 3306 33060            0B
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  ENTRYPOINT ["docker-entry…   0B
+  <missing>      4 weeks ago   /bin/sh -c ln -s usr/local/bin/docker-entryp…   34B
+  <missing>      4 weeks ago   /bin/sh -c #(nop) COPY file:345a22fe55d3e678…   14.5kB
+  <missing>      4 weeks ago   /bin/sh -c #(nop) COPY dir:2e040acc386ebd23b…   1.12kB
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  VOLUME [/var/lib/mysql]      0B
+  <missing>      4 weeks ago   /bin/sh -c {   echo mysql-community-server m…   420MB
+  <missing>      4 weeks ago   /bin/sh -c echo 'deb http://repo.mysql.com/a…   55B
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  ENV MYSQL_VERSION=8.0.25-…   0B
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  ENV MYSQL_MAJOR=8.0          0B
+  <missing>      4 weeks ago   /bin/sh -c set -ex;  key='A4A9406876FCBD3C45…   2.61kB
+  <missing>      4 weeks ago   /bin/sh -c apt-get update && apt-get install…   52.2MB
+  <missing>      4 weeks ago   /bin/sh -c mkdir /docker-entrypoint-initdb.d    0B
+  <missing>      4 weeks ago   /bin/sh -c set -eux;  savedAptMark="$(apt-ma…   4.17MB
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  ENV GOSU_VERSION=1.12        0B
+  <missing>      4 weeks ago   /bin/sh -c apt-get update && apt-get install…   9.34MB
+  <missing>      4 weeks ago   /bin/sh -c groupadd -r mysql && useradd -r -…   329kB
+  <missing>      4 weeks ago   /bin/sh -c #(nop)  CMD ["bash"]                 0B
+  <missing>      4 weeks ago   /bin/sh -c #(nop) ADD file:7362e0e50f30ff454…   69.3MB
+  ```
+
+
+##### docker tag 重命名镜像
+
+​	这会Copy出一个镜像来
+
+```shell
+docker tag --help
+
+Usage:  docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
+
+Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
+```
+
+
+
+##### docker save
+
+保存镜像文件
+
+##### docker load
+
+载入镜像文件
+
+##### docker import 
+
+载入容器成为镜像文件
+
 
 
 #### 容器命令
@@ -360,7 +418,14 @@ sudo systemctl restart docker
   9d1b7b6f0424   elasticearch_test   0.74%     3.366GiB / 24.95GiB   13.49%    766B / 0B   0B / 0B     46
   ```
 
-  
+
+##### docker export
+
+导出容器成为一个容器文件
+
+相当于虚拟机快照
+
+但是这个操作会与docker save不同，他会丢失掉历史数据。
 
 #### 常用的其他命令
 
@@ -425,8 +490,6 @@ sudo systemctl restart docker
 
   ```shell
   # docker inspect --help
-  
-  
     -f, --format string   Format the output using the given Go template
     -s, --size            Display total file sizes if the type is container
         --type string     Return JSON for specified type
@@ -677,6 +740,32 @@ sudo systemctl restart docker
   #未来使用数据卷技术联通
   ```
 
+##### docker login
+
+登陆 hub docker命令
+
+```shell
+Log in to a Docker registry or cloud backend.
+If no registry server is specified, the default is defined by the daemon.
+
+Usage:
+  docker login [OPTIONS] [SERVER] [flags]
+  docker login [command]
+
+Available Commands:
+  azure       Log in to azure
+
+Flags:
+  -h, --help              Help for login
+  -p, --password string   password
+      --password-stdin    Take the password from stdin
+  -u, --username string   username
+
+Use "docker login [command] --help" for more information about a command.
+```
+
+
+
 #### 打包命令
 
 ##### docker commit
@@ -696,7 +785,165 @@ sudo systemctl restart docker
 
 ```
 
+##### dockers build
 
+1. 地址 hub.docker.com
+
+2. 使用 dockers login 登陆
+
+3. 在服务器上提交镜像
+
+   ```shell
+   Log in to a Docker registry or cloud backend.
+   If no registry server is specified, the default is defined by the daemon.
+   
+   Usage:
+     docker login [OPTIONS] [SERVER] [flags]
+     docker login [command]
+   
+   Available Commands:
+     azure       Log in to azure
+   
+   Flags:
+     -h, --help              Help for login
+     -p, --password string   password
+         --password-stdin    Take the password from stdin
+     -u, --username string   username
+   
+   Use "docker login [command] --help" for more information about a command.
+   ```
+
+4. 登陆后提交 镜像使用 docker push
+
+   ```shell
+   #注意在使用docker push 时push的镜像必须是 [本用户名]/imagename[tag]
+   docker push akachi/mytomcat:1.0
+   The push refers to repository [docker.io/akachi/mytomcat]
+   44793e2a4b5c: Pushed
+   7ccebed91949: Pushed
+   5f70bf18a086: Pushed
+   2653d992f4ef: Pushed
+   1.0: digest: sha256:e7b4e3a3536c69ba9cebbef5cd3f73c4a8d68eecb4fd21a75e0dd6339aedfbf6 size: 1160
+   ```
+
+##### docker network inspect
+
+```shell
+# 查看网络
+[akachi@AKACHI-PC-2018 dell]$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+4c060768ae23   bridge    bridge    local
+920827256eba   host      host      local
+30723751be30   none      null      local
+2a2f74e8b124   thenet    bridge    local
+```
+
+```shell
+#查看网络
+[akachi@AKACHI-PC-2018 dell]$ docker network inspect thenet
+#查看docker具体的网络情况
+[akachi@AKACHI-PC-2018 dell]$ docker inspect 
+```
+
+##### docker network create
+
+```shell
+# 创建docker网络
+[akachi@AKACHI-PC-2018 dell]$ docker network create --help
+
+Usage:  docker network create [OPTIONS] NETWORK
+
+Create a network
+
+Options:
+      --attachable           Enable manual container attachment
+      --aux-address map      Auxiliary IPv4 or IPv6 addresses used by Network driver (default map[])
+      --config-from string   The network from which to copy the configuration
+      --config-only          Create a configuration only network
+  -d, --driver string        Driver to manage the Network (default "bridge")
+      --gateway strings      IPv4 or IPv6 Gateway for the master subnet
+      --ingress              Create swarm routing-mesh network
+      --internal             Restrict external access to the network
+      --ip-range strings     Allocate container ip from a sub-range
+      --ipam-driver string   IP Address Management Driver (default "default")
+      --ipam-opt map         Set IPAM driver specific options (default map[])
+      --ipv6                 Enable IPv6 networking
+      --label list           Set metadata on a network
+  -o, --opt map              Set driver specific options (default map[])
+      --scope string         Control the network's scope
+      --subnet strings       Subnet in CIDR format that represents a network segment
+[akachi@AKACHI-PC-2018 dell]$
+# 例子创建一个thenet
+[akachi@AKACHI-PC-2018 dell]$ docker network create --driver bridge --subnet 192.114.2.0/24 --gateway 192.114.2.200 thenet
+195dd09926a8b48d224441aef769a55f8fff6c55dbf2578619e0a5ae7c562693
+[akachi@AKACHI-PC-2018 dell]$ docker network inspect thenet
+[
+    {
+        "Name": "thenet",
+        "Id": "195dd09926a8b48d224441aef769a55f8fff6c55dbf2578619e0a5ae7c562693",
+        "Created": "2021-06-19T08:44:53.7318806Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.114.2.0/24",
+                    "Gateway": "192.114.2.200"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+```
+
+##### docker network remove thenet
+
+```shell
+#移除网络
+[akachi@AKACHI-PC-2018 dell]$ docker network remove thenet
+thenet
+```
+
+打包命令
+
+##### docker network connect
+
+connect命令的功能是连接一个容器到一个网络
+
+ ```shell
+ Commands:
+   connect     Connect a container to a network
+   
+ 
+ [akachi@AKACHI-PC-2018 dell]$ docker network connect --help
+ 
+ Usage:  docker network connect [OPTIONS] NETWORK CONTAINER
+ 
+ Connect a container to a network
+ 
+ Options:
+       --alias strings           Add network-scoped alias for the container
+       --driver-opt strings      driver options for the network
+       --ip string               IPv4 address (e.g., 172.30.100.104)
+       --ip6 string              IPv6 address (e.g., 2001:db8::33)
+       --link list               Add link to another container
+       --link-local-ip strings   Add a link-local address for the container
+       
+ #使用方式参考文档
+ docker network connect [参数] 网络名称 容器名或ID
+ ```
 
 
 
@@ -708,13 +955,759 @@ sudo systemctl restart docker
 
 ##### docker命令图
 
-![image-20210416004829718](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\image-20210416004829718.png)
+![image-20210609154440482](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210614215658.png)
+### 容器数据卷
+
+#### 什么是容器数据卷
+
+吧数据放到容器外面，持久化数据
+
+``` shell
+docker run -it -v /home/test:/home centos /bin/bash
+# 测试下来这种情况不能从外部修改数据
+```
+
+- 操作MySQL容器挂载
+
+``` shell
+# 运行一个docker
+docker run -d -p 3316:3306 -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name Test_V_MySQL mysql:5.7
+# 查看所有的卷
+docker volume ls
+# 查看卷具体位置
+docker volume inspect [name]
+```
+
+#### 具名挂载
+
+``` shell
+#指定外部挂载
+docker run -d -P --name negix02 -v juming-ngix:/etc/nginx nginx
+```
+
+
+
+#### 匿名挂载
+
+```shell
+# 不指定外部挂载
+docker run -d -P --name negix02 -v /etc/nginx nginx
+```
+
+#### 概况
+
+- 具名挂载 -v 容器内路径
+- 匿名挂载 -v 卷名:容器名
+- 指定路径挂载 -v /宿主机路径:/容器内路径
+
+#### 特殊情况
+
+```shell
+# 改变读写权限
+RO 只读
+RW 可读写
+docker run -d -p --name negix03 -v juming-nginx:/etc/nginx:ro nginx
+docker run -d -p --name negix03 -v juming-nginx:/etc/nginx:rw nginx
+
+# RO指容器无法从内部改变
+# RW指容器有读写权限
+```
+
+#### 多MySQL同步数据
+
+![image-20210608172454714](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114739.png)
+
+```shell
+# docker run -it --name docker01 akachi/centos
+# docker run -it --name docker02 --volumes-from docker01 akachi/centos
+# docker run -it --name docker03 --volumes-from docker01 akachi/centos
+# 在以上情况下实际上是docker 02 与03 都挂载卷到了宿主机的相同目录下
+
+# 测试MySQL
+docker run -d -p 3316:3306 -v /etc/mysql/conf.d -v /var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql01 mysql:5.7
+# 启动mysql2
+docker run -d -p 3326:3306 -e MYSQL_ROOT_PASSWORD=123456 --name mysql02 --volumes-from  mysql01 mysql:5.7
+```
 
 ### docker 网络
 
+![image-20210615234938506](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210615234938.png)
+
+
+
+**使用docker网络使不同容器中的对象能够互相调用，比如tomcat调用mysql**
+
+![image-20210615235125452](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210615235125.png)
+
+> 查看tomcat所在地址
+
+``` shell
+# 启动tomcat
+[akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat01 tomcat
+
+Status: Downloaded newer image for tomcat:latest
+#查看tomcat本机地址
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat01 ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0
+9: eth0@if10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+[akachi@AKACHI-PC-2018 dell]$
+# 系统分配了一个eth0@if10地址给这个dockers服务器
+```
+
+>每启动一个dockers都会多出一对网卡
+
+![image-20210616001554868](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210616001554.png)
+
+> 原理
+
+1. 每启动一个dockers容器docker就会为它分配一个IP地址
+2. 只要安装了dockers就会启动一个docker0
+3. docker0网卡默认使用桥接模式。
+4. docker0使用的是evth-pair技术！
+
+> 什么是evth-pair 技术！
+
+```shell
+#evth-pair 技术就是一堆虚拟设备接口
+#他们是成对出现的连接着协议。
+#Bridge OVS都是基于evth-pair的
+```
+
+> 网络模型图
+>
+> ![image-20210616003446277](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210616003446.png)
+>
+> 大概率是以上情况，使用的是evth-pair技术的 Bridge(桥接模式)进行连接，Linuxbriged 充当一个路由器。
+>
+> 在桥接的情况下，LinuxBridge要么使用广播要么使用路由表的形式去转发请求
+
+
+
+> 思考: 能不能再docker环境中使用dns服务
+
+#### --link 
+
+``` shell
+[akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat03 --link tomcat01 tomcat
+09e36e36926cb49f546f33558803e09f9928d3e83a2cef4abbdbf2960b970e38
+[akachi@AKACHI-PC-2018 dell]$ doc^C
+[akachi@AKACHI-PC-2018 dell]$ dc^C
+[akachi@AKACHI-PC-2018 dell]$ docker exec tomcat03 ping tomcat01
+PING tomcat01 (172.17.0.3) 56(84) bytes of data.
+64 bytes from tomcat01 (172.17.0.3): icmp_seq=1 ttl=64 time=0.055 ms
+64 bytes from tomcat01 (172.17.0.3): icmp_seq=2 ttl=64 time=0.028 ms
+```
+
+> 会有很多坑，在--link的情况下  
+
+```shell
+#通过network命令查看docker网络
+[akachi@AKACHI-PC-2018 dell]$ docker network --help
+
+Usage:  docker network COMMAND
+
+Manage networks
+
+Commands:
+  connect     Connect a container to a network
+  create      Create a network
+  disconnect  Disconnect a container from a network
+  inspect     Display detailed information on one or more networks
+  ls          List networks
+  prune       Remove all unused networks
+  rm          Remove one or more networks
+
+Run 'docker network COMMAND --help' for more information on a command.
+[akachi@AKACHI-PC-2018 dell]$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+511e6530ee56   bridge    bridge    local
+920827256eba   host      host      local
+30723751be30   none      null      local
+[akachi@AKACHI-PC-2018 dell]$ docker network inspect 511e6530ee56
+#通过以上命令我们可以看到所有网络
+```
+
+> 查看dockers容器冲在哪里显示了links的信息
+
+```shell 
+#通过dockers inspect tomcat03
+#可以看到一个Links :[]
+```
+
+![image-20210616012504737](https://raw.githubusercontent.com/akachi10/notes/master/pic/20210616012504.png)
+
+>实现原理
+
+```shell
+#实际上是通过hosts来实现的连接
+root@09e36e36926c:/etc# cat /etc/hosts
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+172.17.0.3      tomcat01 627b81dd0837
+172.17.0.4      09e36e36926c
+```
+
+
+
+> 现在不用--link了
+
+#### dockers网络原理
+
+> 最新的情况下我们以及不建议用docker0 来作为docker的网络了
+>
+> 正真的容器互联技术:
+
+```shell
+#查看所有docker网络
+[akachi@AKACHI-PC-2018 ~]$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+511e6530ee56   bridge    bridge    local
+920827256eba   host      host      local
+30723751be30   none      null      local
+
+```
+
+> 网络有几种模式？
+
+- bridge: 桥接(默认)
+
+- none:不配置网络
+
+- host: 主机模式
+
+- container:容器内网络联通(用的少)
+
+``` shell
+docker run -d -P --name tomcat11 --net bridge tomcat
+#通过这个方式启动的tomcat与默认的情况下启动是等价的，只是显示指定了bridge
+```
+
+> 创建一个子网
+
+```shell
+# driver bridge
+# -subnet 192.114.2.0/24
+# --gateway 192.114.2.200
+[root@localhost ~]#  docker network create --driver bridge --subnet 192.114.2.0/24 --gateway 192.114.2.200 thenet
+3a6644ad4aaa6b236a42149ed9212b7dcd9ad1fda4a2309ac4ae664d0cedc7b9
+
+[root@localhost ~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+594bdad93d28   bridge    bridge    local
+1578412b80fd   host      host      local
+653c0a1495dd   none      null      local
+3a6644ad4aaa   thenet    bridge    local
+# 现在ip addr中多了一条数据
+[root@localhost ~]# ip addr
+102: br-3a6644ad4aaa: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+    link/ether 02:42:10:d3:1b:22 brd ff:ff:ff:ff:ff:ff
+    inet 192.114.2.200/24 brd 192.114.2.255 scope global br-3a6644ad4aaa
+       valid_lft forever preferred_lft forever
+       
+# 看到了自己的网络
+[akachi@AKACHI-PC-2018 dell]$ docker network inspect thenet
+[
+    {
+        "Name": "thenet",
+        "Id": "195dd09926a8b48d224441aef769a55f8fff6c55dbf2578619e0a5ae7c562693",
+        "Created": "2021-06-19T08:44:53.7318806Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.114.2.0/24",
+                    "Gateway": "192.114.2.200"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+```
+
+#### 测试一个自己的tomcat
+
+``` shell
+#在新的网络thenet中创建两个tomcat
+[akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat-thenet01 --net thenet tomcat
+96a4ccf5a2504e4539e11e825e065129aaa1c88483c41b6b84ad3544ccb9f3ed
+[akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat-thenet02 --net thenet tomcat
+a75d75b18d1532e6b89d4e81eeae685534a9d3f2c287e50cea4b2277e57bd0ce
+#查看新的网络
+[akachi@AKACHI-PC-2018 dell]$ docker network inspect thenet
+[
+    {
+        "Name": "thenet",
+        "Id": "195dd09926a8b48d224441aef769a55f8fff6c55dbf2578619e0a5ae7c562693",
+        "Created": "2021-06-19T08:44:53.7318806Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.114.2.0/24",
+                    "Gateway": "192.114.2.200"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "96a4ccf5a2504e4539e11e825e065129aaa1c88483c41b6b84ad3544ccb9f3ed": {
+                "Name": "tomcat-thenet01",
+                "EndpointID": "09d10adc87108b9bb7b26b95bcd64b92ee3c7af3c578f667867f64a16da198fc",
+                "MacAddress": "02:42:c0:72:02:01",
+                "IPv4Address": "192.114.2.1/24",
+                "IPv6Address": ""
+            },
+            "a75d75b18d1532e6b89d4e81eeae685534a9d3f2c287e50cea4b2277e57bd0ce": {
+                "Name": "tomcat-thenet02",
+                "EndpointID": "d82e07548a9b9990fc31e82d9e47d10c0e691bde6aa38c470772e792982fbd67",
+                "MacAddress": "02:42:c0:72:02:02",
+                "IPv4Address": "192.114.2.2/24",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+#我们发现多了两个节点分别是2.1和2.2
+#我们再进入其中一台ping另外一台
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat-thenet02 /bin/bash
+root@a75d75b18d15:/usr/local/tomcat# ping tomcat-thenet01
+PING tomcat-thenet01 (192.114.2.1) 56(84) bytes of data.
+64 bytes from tomcat-thenet01.thenet (192.114.2.1): icmp_seq=1 ttl=64 time=0.087 ms
+64 bytes from tomcat-thenet01.thenet (192.114.2.1): icmp_seq=2 ttl=64 time=0.032 ms
+#真神奇这个网络中的对象直接可以相互ping通
+#自定义的桥接修复了docker0的问题
+```
+
+#### 网络连通
+
+我们已经知道在新建的桥接之上的容器是可以相互连通的。
+
+现在要联通不同网络之间的操作
+
+```shell
+#创建一个tomcat
+[akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat01 tomcat
+58f4ddd56c9c3e02033817b411b4650758cd855e25ee2056d1cf0ce03e43f5f4
+#查看命令
+[akachi@AKACHI-PC-2018 dell]$ docker network connect --help
+
+Usage:  docker network connect [OPTIONS] NETWORK CONTAINER
+
+Connect a container to a network
+
+Options:
+      --alias strings           Add network-scoped alias for the container
+      --driver-opt strings      driver options for the network
+      --ip string               IPv4 address (e.g., 172.30.100.104)
+      --ip6 string              IPv6 address (e.g., 2001:db8::33)
+      --link list               Add link to another container
+      --link-local-ip strings   Add a link-local address for the container
+      
+#我们得知查看是通过先网络名后容器命来调用连接的
+[akachi@AKACHI-PC-2018 dell]$ docker network connect thenet tomcat01
+#调用连接tomcat01 连接到thenet上
+#查看容器网络
+[akachi@AKACHI-PC-2018 dell]$ docker inspect tomcat01
+  "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "7b530392865cc2f1dc9ec6c3aeacc68193959bead9b0e841acb8230f080094fa",
+                    "EndpointID": "f2e7077db1ef912bbad2a1633f238702b85e079d8d221614aeb3415e5b86cb61",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.3",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:03",
+                    "DriverOpts": null
+                },
+                "thenet": {
+                    "IPAMConfig": {},
+                    "Links": null,
+                    "Aliases": [
+                        "58f4ddd56c9c"
+                    ],
+                    "NetworkID": "195dd09926a8b48d224441aef769a55f8fff6c55dbf2578619e0a5ae7c562693",
+                    "EndpointID": "dd68289ac0e60f31eef960173709271c8f8f69a0d5964f1415a47edbdb1c1d65",
+                    "Gateway": "192.114.2.200",
+                    "IPAddress": "192.114.2.3",
+                    "IPPrefixLen": 24,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:c0:72:02:03",
+                    "DriverOpts": {}
+                }
+           }
+#我们查看网络得知这个tomcat01已经拥有两个网络并且IP风别显示出来了
+#测试双向是否能ping同双向IP是否能ping通
+[akachi@AKACHI-PC-2018 dell]$ docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                                                  NAMES
+58f4ddd56c9c   tomcat         "catalina.sh run"        6 minutes ago    Up 6 minutes    0.0.0.0:49155->8080/tcp, :::49155->8080/tcp            tomcat01
+a75d75b18d15   tomcat         "catalina.sh run"        22 minutes ago   Up 22 minutes   0.0.0.0:49154->8080/tcp, :::49154->8080/tcp            tomcat-thenet02
+96a4ccf5a250   tomcat         "catalina.sh run"        22 minutes ago   Up 22 minutes   0.0.0.0:49153->8080/tcp, :::49153->8080/tcp            tomcat-thenet01
+c191a5546e2b   mysql:8.0.25   "docker-entrypoint.s…"   4 weeks ago      Up 3 hours      0.0.0.0:3306->3306/tcp, :::3306->3306/tcp, 33060/tcp   mysql_test
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat01 ping tomcat-thenet02
+PING tomcat-thenet02 (192.114.2.2) 56(84) bytes of data.
+64 bytes from tomcat-thenet02.thenet (192.114.2.2): icmp_seq=1 ttl=64 time=0.099 ms
+^C
+--- tomcat-thenet02 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.099/0.099/0.099/0.000 ms
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat-thenet02 ping tomcat01
+PING tomcat01 (192.114.2.3) 56(84) bytes of data.
+64 bytes from tomcat01.thenet (192.114.2.3): icmp_seq=1 ttl=64 time=0.032 ms
+^C
+--- tomcat01 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.032/0.032/0.032/0.000 ms
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat-thenet02 ping 192.114.2.3
+PING 192.114.2.3 (192.114.2.3) 56(84) bytes of data.
+64 bytes from 192.114.2.3: icmp_seq=1 ttl=64 time=0.040 ms
+64 bytes from 192.114.2.3: icmp_seq=2 ttl=64 time=0.051 ms
+^C
+--- 192.114.2.3 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 73ms
+rtt min/avg/max/mdev = 0.040/0.045/0.051/0.008 ms
+[akachi@AKACHI-PC-2018 dell]$ docker exec -it tomcat01 ping 192.168.2.2
+PING 192.168.2.2 (192.168.2.2) 56(84) bytes of data.
+64 bytes from 192.168.2.2: icmp_seq=1 ttl=37 time=5.10 ms
+64 bytes from 192.168.2.2: icmp_seq=2 ttl=37 time=5.49 ms
+^C
+--- 192.168.2.2 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 2ms
+rtt min/avg/max/mdev = 5.095/5.290/5.486/0.208 ms
+#我们先查看了所有容器
+#先在tomcat01中用容器名ping tomcat-thenet02
+#再用tomcat-thenet02中用容器名ping tomcat01
+#再试ip结果都是通的
+#当然ping tomcat01的另一个网络docker0 中的IP必然是不通的这里就不试了
+```
+
+
+
 ### dockerFile
 
-### 容器数据卷
+#### 初步认识dockerFile
+
+
+
+Dockerfile是官方命名创建Dockerfile文件时使请使用这个
+
+
+
+dockerFile就是构建docker镜像的文件。是一段命令脚本，通过脚本可以生成镜像
+
+
+
+``` shell
+# 创建一个dockerfile1 文件
+# 内容如下
+FRO M centos
+
+VOLUME ["volume01","volume02"]
+
+CMD echo "---end---"
+CMD /bin/bash
+# build一个docker image
+docker build -f dockerfile1 -t akachi/centos:1.0 .
+```
+
+```shell
+# 启动容器
+docker run -it akachi/centos:1.0 /bin/bash
+```
+
+##### dockerFile 构建步骤
+
+1. 编写一个dockerfile文件
+2. 构建一个镜像
+3. docker run 运行镜像
+4. docker push 发布镜像 DockerHub
+
+##### DockerFile 命令 
+
+- 官方地址
+
+  https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+
+- 常用命令
+
+  ![image-20210609154456622](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114655.png)
+
+  ![image-20210610135844359](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114658.png)
+
+  ```shell
+  FROM		#镜像基于谁
+  MAINTAINER	#作者 akachi<zsts@hotmail.com>
+  RUN			#谁构建
+  CMD			#操作 指定这个容器启动的时候要运行的命令,只有最后一个会生效，可被替代
+  ADD			#添加内容如压缩包 会自动解压
+  WORKDIR		#镜像的工作目录
+  VOLUME		#容器卷
+  EXPOSE		#暴露端口
+  ENTRYPOINT	#操作 指定这个容器启动的时候要运行的命令。
+  ONBUILD		#当构建一个被继承的DockerFile这个时候会运行一个ONBUILD的指令。
+  COPY		#类似ADDD，将我们的文件拷贝到镜像中
+  ENV			#构建的时候设置环境变量 -e
+  ```
+
+  > 创建一个自己的centOS
+  >
+  > :可以抄袭hub.docker.com
+
+  数据
+
+  
+
+- 地方
+
+
+
+![image-20210609154447560](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114702.png)
+
+
+
+
+
+##### 基础知识
+
+- 每一个保留的关键字都是大写
+- 执行从上到下
+- #表示注释
+- 每一个指令都会创建并提交一个新的镜像层。
+
+![image-20210609154807565](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114705.png)
+
+dockerfile是面向开发的，我没交付项目都是用docker的。
+
+步骤：上线、部署、运维
+
+DockerFile：定义了步骤
+
+DockerImages:通过dockerFile构建生成镜像
+
+Docker容器：容器就是运行的镜像
+
+##### 练习
+
+
+
+```shell
+#创建  mydockerfile-centos文件
+FROM centos
+MAINTAINER akachi<zsts@hotmail.com>
+
+ENV MYPATH /usr/local
+WORKDIR $MYPATH
+
+RUN yum -y install vim
+RUN yum -y install net-tools
+
+EXPOSE 8084
+
+CMD echo $MYPATH
+CMD echo "----end----"
+CMD /bin/bash
+
+#执行docker build
+docker build -f mydockerfile-centos -t mycentos:0.1 .
+
+#在这个练习中我们加入了config命令，设定了用户工作路径为MYPATH并且创建了一个docker images
+
+
+```
+
+
+
+> CMD和 ENTRYPOINT的区别
+
+```shell
+CMD			#操作 指定这个容器启动的时候要运行的命令,只有最后一个会生效，可被替代
+ENTRYPOINT	#操作 指定这个容器启动的时候要运行的命令。
+```
+
+###### 测试CMD
+
+```shell
+# 创建test
+FROM centos
+CMD /bin/bash
+CMD ls -a
+# 运行起来可以
+```
+
+###### 测试ENTRYPOINT
+
+```shell
+FROM centos
+ENTRYPOINT ["ls","-a"]
+# 在这种情况下 可以追加-l命令
+[akachi@AKACHI-PC-2018 dockerfile]$ docker run -it test:3 -l
+total 56
+drwxr-xr-x   1 root root 4096 Jun 11 09:28 .
+drwxr-xr-x   1 root root 4096 Jun 11 09:28 ..
+```
+
+#### 发布自己的镜像
+
+1. 地址 hub.docker.com
+
+2. 在服务器上提交镜像
+
+   ```shell
+   Log in to a Docker registry or cloud backend.
+   If no registry server is specified, the default is defined by the daemon.
+   
+   Usage:
+     docker login [OPTIONS] [SERVER] [flags]
+     docker login [command]
+   
+   Available Commands:
+     azure       Log in to azure
+   
+   Flags:
+     -h, --help              Help for login
+     -p, --password string   password
+         --password-stdin    Take the password from stdin
+     -u, --username string   username
+   
+   Use "docker login [command] --help" for more information about a command.
+   ```
+
+3. 登陆后提交 镜像使用 docker push
+
+   ```shell
+   #注意在使用docker push 时push的镜像必须是 [本用户名]/imagename[tag]
+   docker push akachi/mytomcat:1.0
+   The push refers to repository [docker.io/akachi/mytomcat]
+   44793e2a4b5c: Pushed
+   7ccebed91949: Pushed
+   5f70bf18a086: Pushed
+   2653d992f4ef: Pushed
+   1.0: digest: sha256:e7b4e3a3536c69ba9cebbef5cd3f73c4a8d68eecb4fd21a75e0dd6339aedfbf6 size: 1160
+   ```
+
+
+### Docker Compose
+
+操作dockersComposeke以操作多个dockers文件
+
+![image-20210624144530010](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/24/144544.png)
+
+
+
+官方文档:
+
+dockerCommpose是一个定义多个容器的，
+
+可以通过YAML进行配置的工具。
+
+single command 看看有多少命令
+
+1. 我们要有一个Dockerfile
+2. 我们要写一个docker-compose.yml
+3. 运行 docker compose up 
+
+**dockercompose的作用是:批量容器编排**
+
+> 理解 
+>
+> compose是docker官方的开源项项目 需要独立安装
+>
+
+`docker-compose.yml` looks like this:
+
+```
+version: "3.9"  # optional since v1.27.0
+services:
+  web: #Web服务
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+      - logvolume01:/var/log
+    links:
+      - redis
+  redis: #redis 服务
+    image: redis
+volumes:
+  logvolume01: {}
+```
+
+
+
+> 概念
+>
+> services= 容器
+>
+> project = 项目 一组关联的容器
+
+#### linux安装docker compose
+
+```shell
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
+
+
+
+
+ ### Docker Swarm
+
+集群方式部署
+
+### Docker Secret
+
+### Docker  Config
+
+### k8s
+
+### GO
 
 ### 可视化工具
 
@@ -760,7 +1753,7 @@ docker pull [OPTIONS] NAME[:TAG|@DIGEST]
 - | 代表或者的意思
 - @DIGEST 大概率是版本编号的意思 @有可能同:TAG 的:为了区分开其含义所以使用@
 
-
+- 在Dockerfile的CMD中 && 表示之后要执行。
 
 ## 作业
 
@@ -875,6 +1868,360 @@ CONTAINER ID   NAME                CPU %     MEM USAGE / LIMIT     MEM %     NET
 ![image-20210505195050614](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\image-20210505195050614.png)
 
 
+
+### 作业5 Dockerfile tomcat
+
+```shell
+# 创建Dockerfile 
+FROM centos
+MAINTAINER akachi<zsts@hotmail.com>
+
+ENV yum -y install vim
+ENV MYPATH /usr/local
+WORKDIR $MYPATH
+
+ADD addfile/jdk-15_linux-x64_bin.tar.gz $MYPATH
+ADD addfile/apache-tomcat-10.0.6.tar.gz $MYPATH
+
+ENV JAVA_HOME $MYPATH/jdk-15
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+ENV CATALINA_HOME $MYPATH/apache-tomcat-10.0.6
+ENV CATALINA_BASE $CATALINA_BASE
+
+ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/lib:$CATALINA_HOME/bin
+
+EXPOSE 8080
+
+CMD startup.sh && tail -f $CATALINA_HOME/logs/catalina.out
+
+# build Dockerfile
+# 由于命名Dockerfile 在docker build的时候是不需要指定-f 的
+docker build -t mytomcat .
+# 运行dockersfile
+# 指定两个
+docker run -d -p 8080:8080 -v /home/akachi/dockerfile/webapps:/usr/local/apache-tomcat-10.0.6/webapps -v /home/akachi/dockerfile/logs:/usr/local/apache-tomcat-10.0.6/logs --name tomcat01 mytomcat
+```
+
+
+
+### 测试6 在阿里云镜像服务器中上传docker镜像
+
+1. 找到阿里云的镜像服务器
+
+   搜索 "镜像容器服务" > 点击管理控制台 >点击个人或企业实例
+
+   或者通过URL直接进入 
+
+   https://cr.console.aliyun.com/cn-hangzhou/instances > 点击个人实例或企业实例
+
+2. 查看文档 
+
+   点击仓库管理>镜像仓库/某个仓库，并且参考文档
+
+3. 文档内容
+
+   ## 1. 登录阿里云Docker Registry
+
+   ```
+   $ docker login --username=z****@hotmail.com registry.cn-hangzhou.aliyuncs.com
+   ```
+
+   用于登录的用户名为阿里云账号全名，密码为开通服务时设置的密码。
+
+   您可以在访问凭证页面修改凭证密码。
+
+   ## 2. 从Registry中拉取镜像
+
+   ```shell
+   $ docker pull registry.cn-hangzhou.aliyuncs.com/akachi/tomcat:[镜像版本号]
+   ```
+
+   ## 3. 将镜像推送到Registry
+
+   ```shell
+   $ docker login --username=z****@hotmail.com registry.cn-hangzhou.aliyuncs.com
+   $ docker tag [ImageId] registry.cn-hangzhou.aliyuncs.com/akachi/tomcat:[镜像版本号]
+   $ docker push registry.cn-hangzhou.aliyuncs.com/akachi/tomcat:[镜像版本号]
+   ```
+
+   请根据实际镜像信息替换示例中的[ImageId]和[镜像版本号]参数。
+
+   ## 4. 选择合适的镜像仓库地址
+
+   从ECS推送镜像时，可以选择使用镜像仓库内网地址。推送速度将得到提升并且将不会损耗您的公网流量。
+
+   如果您使用的机器位于VPC网络，请使用 registry-vpc.cn-hangzhou.aliyuncs.com 作为Registry的域名登录。
+
+   ## 5. 示例
+
+   使用"docker tag"命令重命名镜像，并将它通过专有网络地址推送至Registry。
+
+   ```shell
+   $ docker images
+   REPOSITORY                                                         TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+   registry.aliyuncs.com/acs/agent                                    0.7-dfb6816         37bb9c63c8b2        7 days ago          37.89 MB
+   $ docker tag 37bb9c63c8b2 registry-vpc.cn-hangzhou.aliyuncs.com/acs/agent:0.7-dfb6816
+   ```
+
+   使用 "docker push" 命令将该镜像推送至远程。
+
+   ```shell
+   $ docker push registry-vpc.cn-hangzhou.aliyuncs.com/acs/agent:0.7-dfb6816
+   ```
+
+### 作业7 Redis
+
+分片+高可用+负载均衡
+
+这是一个三主三从的集群
+
+![image-20210621135359081](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/135402.png)
+
+1. 创建网络
+
+   ```shell
+   [akachi@AKACHI-PC-2018 dell]$ docker network create --driver bridge --gateway 192.114.7.15 --subnet 192.114.7.0/24 redisnet
+   0320e12a36b17917fc16a16ebe2584ecf53e1a92cd8aece99c004626b28feea9
+   ```
+
+2. 创建配置文件
+
+   ```shell
+   #执行这个脚本创建配置文件
+   for port in $(seq 1 6);\
+   do \
+   mkdir -p /home/akachi/redis/node-${port}/conf
+   touch /home/akachi/redis/node-${port}/conf/redis.conf
+   cat << fatherakachi >/home/akachi/redis/node-${port}/conf/redis.conf
+   port 6379
+   bind 0.0.0.0
+   cluster-enabled yes
+   cluster-config-file nodes.conf
+   cluster-node-timeout 5000
+   cluster-announce-ip 192.114.7.${port}
+   cluster-announce-port 6379
+   cluster-announce-bus-port 16379
+   appendonly yes
+   fatherakachi
+   done
+   ```
+
+3. 创建 docker
+
+   ```shell
+   #创建redis
+   for id in $(seq 1 6)
+   do
+   docker run -p 637${id}:6379 -p 1637${id}:16379 --name redis-${id} \
+   -v /home/akachi/redis/node-${id}/data:/data \
+   -v /home/akachi/redis/node-${id}/conf/redis.conf:/etc/redis/redis.conf \
+   -d --net redisnet --ip 192.114.7.${id} redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+   done
+   
+   #移除失败的
+   for id in $(seq 1 6); 
+   do 
+   docker rm -f redis-${id};
+   done
+   
+   ```
+
+4. 进入 docker1
+
+   ```shell
+   C:\Users\dell>docker exec -it redis-1 /bin/sh
+   /data #
+   ```
+
+5. 创建redis集群
+
+   ```shell
+    redis-cli --cluster create 192.114.7.1:6379 192.114.7.2:6379 192.114.7.3:6379 192.114.7.4:6379 192.114.7.5:6379 192.114.7.6:6379 --cluster-replic
+   as 1
+   >>> Performing hash slots allocation on 6 nodes...
+   Master[0] -> Slots 0 - 5460
+   Master[1] -> Slots 5461 - 10922
+   Master[2] -> Slots 10923 - 16383
+   Adding replica 192.114.7.5:6379 to 192.114.7.1:6379
+   Adding replica 192.114.7.6:6379 to 192.114.7.2:6379
+   Adding replica 192.114.7.4:6379 to 192.114.7.3:6379
+   M: d87b93316c2ed32a38bae18a09bb26343adc8cad 192.114.7.1:6379
+      slots:[0-5460] (5461 slots) master
+   M: 182a391d7956ff6a9acbda0fa386946de1b09020 192.114.7.2:6379
+      slots:[5461-10922] (5462 slots) master
+   M: 9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac 192.114.7.3:6379
+      slots:[10923-16383] (5461 slots) master
+   S: dd813964879499ee1f6ef5395cb9b45e7d32a005 192.114.7.4:6379
+      replicates 9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac
+   S: 7da7072595561b550096ba9e6b3ea93b91024887 192.114.7.5:6379
+      replicates d87b93316c2ed32a38bae18a09bb26343adc8cad
+   S: 4df881acdcece81949615c8dc1ac1c1f9ba081c3 192.114.7.6:6379
+      replicates 182a391d7956ff6a9acbda0fa386946de1b09020
+   Can I set the above configuration? (type 'yes' to accept): yes
+   >>> Nodes configuration updated
+   >>> Assign a different config epoch to each node
+   >>> Sending CLUSTER MEET messages to join the cluster
+   Waiting for the cluster to join
+   ...
+   >>> Performing Cluster Check (using node 192.114.7.1:6379)
+   M: d87b93316c2ed32a38bae18a09bb26343adc8cad 192.114.7.1:6379
+      slots:[0-5460] (5461 slots) master
+      1 additional replica(s)
+   M: 182a391d7956ff6a9acbda0fa386946de1b09020 192.114.7.2:6379
+      slots:[5461-10922] (5462 slots) master
+      1 additional replica(s)
+   S: dd813964879499ee1f6ef5395cb9b45e7d32a005 192.114.7.4:6379
+      slots: (0 slots) slave
+      replicates 9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac
+   S: 4df881acdcece81949615c8dc1ac1c1f9ba081c3 192.114.7.6:6379
+      slots: (0 slots) slave
+      replicates 182a391d7956ff6a9acbda0fa386946de1b09020
+   M: 9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac 192.114.7.3:6379
+      slots:[10923-16383] (5461 slots) master
+      1 additional replica(s)
+   S: 7da7072595561b550096ba9e6b3ea93b91024887 192.114.7.5:6379
+      slots: (0 slots) slave
+      replicates d87b93316c2ed32a38bae18a09bb26343adc8cad
+   [OK] All nodes agree about slots configuration.
+   >>> Check for open slots...
+   >>> Check slots coverage...
+   [OK] All 16384 slots covered.
+   /data #
+   ```
+
+6. 测试高可用性是否成功
+
+   ```shell
+   #连接集群
+   redis-cli -c
+   #查看集群信息
+   127.0.0.1:6379> cluster
+   (error) ERR wrong number of arguments for 'cluster' command
+   127.0.0.1:6379>
+   127.0.0.1:6379> cluster info
+   cluster_state:ok
+   cluster_slots_assigned:16384
+   cluster_slots_ok:16384
+   cluster_slots_pfail:0
+   cluster_slots_fail:0
+   cluster_known_nodes:6
+   cluster_size:3
+   cluster_current_epoch:6
+   cluster_my_epoch:1
+   cluster_stats_messages_ping_sent:601
+   cluster_stats_messages_pong_sent:618
+   cluster_stats_messages_sent:1219
+   cluster_stats_messages_ping_received:613
+   cluster_stats_messages_pong_received:601
+   cluster_stats_messages_meet_received:5
+   cluster_stats_messages_received:1219
+   #查看连接节点
+    cluster nodes
+   182a391d7956ff6a9acbda0fa386946de1b09020 192.114.7.2:6379@16379 master - 0 1624264719541 2 connected 5461-10922
+   dd813964879499ee1f6ef5395cb9b45e7d32a005 192.114.7.4:6379@16379 slave 9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac 0 1624264719041 4 connected
+   4df881acdcece81949615c8dc1ac1c1f9ba081c3 192.114.7.6:6379@16379 slave 182a391d7956ff6a9acbda0fa386946de1b09020 0 1624264719541 6 connected
+   9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac 192.114.7.3:6379@16379 master - 0 1624264719541 3 connected 10923-16383
+   7da7072595561b550096ba9e6b3ea93b91024887 192.114.7.5:6379@16379 slave d87b93316c2ed32a38bae18a09bb26343adc8cad 0 1624264720044 5 connected
+   d87b93316c2ed32a38bae18a09bb26343adc8cad 192.114.7.1:6379@16379 myself,master - 0 1624264718000 1 connected 0-5460
+   #set一个数据
+   set a b
+   -> Redirected to slot [15495] located at 192.114.7.3:6379
+   OK
+   #到外部去关闭192.114.7.3这台机器
+   docker stop redis redis-3
+   #重新连接由于刚刚断了杀死的很可能是redis-3
+   redis-cli -c
+   #查看数据
+    get a
+   -> Redirected to slot [15495] located at 192.114.7.4:6379
+   "b"
+   #由7.4提供了服务
+   #重新查看节点
+   192.114.7.4:6379> cluster nodes
+   4df881acdcece81949615c8dc1ac1c1f9ba081c3 192.114.7.6:6379@16379 slave 182a391d7956ff6a9acbda0fa386946de1b09020 0 1624265161000 6 connected
+   9d6568bd86aa5f6b4a4d14cc5be2c7b0c1d677ac 192.114.7.3:6379@16379 master,fail - 1624264870285 1624264869083 3 connected
+   7da7072595561b550096ba9e6b3ea93b91024887 192.114.7.5:6379@16379 slave d87b93316c2ed32a38bae18a09bb26343adc8cad 0 1624265161556 5 connected
+   d87b93316c2ed32a38bae18a09bb26343adc8cad 192.114.7.1:6379@16379 master - 0 1624265161000 1 connected 0-5460
+   182a391d7956ff6a9acbda0fa386946de1b09020 192.114.7.2:6379@16379 master - 0 1624265161958 2 connected 5461-10922
+   dd813964879499ee1f6ef5395cb9b45e7d32a005 192.114.7.4:6379@16379 myself,master - 0 1624265160000 8 connected 10923-16383
+   192.114.7.4:6379>
+   #我们发现node4变成了myself而 node3 变成了fial。
+   #高可用性集群测试成功
+   ```
+
+   
+
+### 作业8 吧MessageService发布成docker镜像并且提交
+
+1. 创建Dockerfile
+
+   需求:
+
+   - 定义开放5566端口
+   - 设定日志文挂载卷
+   - Dockerfile文件创建再src同级目录下也就是项目的根目录在这里就是gqy-vis-ms目录
+
+   ```shell
+   FROM openjdk:11-jre-slim
+   MAINTAINER akachi<zsts@hotmail.com>
+   
+   ENV MYPATH /usr/local
+   WORKDIR $MYPATH
+   
+   COPY target/gqy-vis-ms-0.0.1-SNAPSHOT.jar gqy-vis-ms-0.0.1-SNAPSHOT.jar
+   COPY /src/main/resources/application.properties application.properties
+   COPY /src/main/resources/application-dev.properties application-dev.properties
+   
+   EXPOSE 5566
+   ENTRYPOINT ["/bin/bash"]
+   ENTRYPOINT ["chmod","/usr/local/logs"]
+   ENTRYPOINT ["java","-jar","gqy-vis-ms-0.0.1-SNAPSHOT.jar"]
+   ```
+
+   
+
+2. 构建docker
+
+   - 通过windows docker找到仓库
+
+     ![image-20210621173225830](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/173228.png)
+
+   ```shell
+   #到达对应目录
+   cd D:\idea_workspace\vis-nbga-parent\gqy-vis-ms>
+   #构建镜像
+   D:\idea_workspace\vis-nbga-parent\gqy-vis-ms>docker build -t 192.168.2.129:5000/web-socker-message-service:1.0 .
+   [+] Building 21.8s (11/11) FINISHED
+    => [internal] load build definition from Dockerfile                                                               0.0s
+    => => transferring dockerfile: 508B                                                                               0.0s
+    => [internal] load .dockerignore                                                                                  0.0s
+    => => transferring context: 2B                                                                                    0.0s
+    => [internal] load metadata for docker.io/library/openjdk:11-jre-slim                                            21.1s
+    => [1/6] FROM docker.io/library/openjdk:11-jre-slim@sha256:b4cb057e8e7f534c3ae279b5f3205e28d6520c0bdb1f80bbf61c0  0.0s
+    => [internal] load build context                                                                                  0.0s
+    => => transferring context: 355B                                                                                  0.0s
+    => CACHED [2/6] WORKDIR @MYPATH                                                                                   0.0s
+    => [3/6] COPY target/gqy-vis-ms-0.0.1-SNAPSHOT.jar gqy-vis-ms-0.0.1-SNAPSHOT.jar                                  0.1s
+    => [4/6] COPY exe/start.sh start.sh                                                                               0.1s
+    => [5/6] COPY /src/main/resources/application.properties application.properties                                   0.1s
+    => [6/6] COPY /src/main/resources/application-dev.properties application-dev.properties                           0.1s
+    => exporting to image                                                                                             0.3s
+    => => exporting layers                                                                                            0.2s
+    => => writing image sha256:c2423248540cf2a54d890e40290f8d308db62c9db94d9cf6bb8e7528e17b1b0e                       0.0s
+    => => naming to 192.168.2.129:5000/web-socker-message-service:1.0
+   ```
+
+3. 测试启动镜像
+
+   ```shell
+   docker run -d -p 5577:5566 --name ms01 192.168.2.129:5000/web-socker-message-service:1.0
+   ```
+
+4. 发布镜像
+
+   ```shell
+   docker push 192.168.2.129:5000/web-socker-message-service:1.0
+   ```
 
 ### Swarm 
 

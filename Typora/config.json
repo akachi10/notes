@@ -1,0 +1,20 @@
+{
+  "picBed": {
+    "uploader": "github",
+    "current": "github",
+    "github": {
+      "repo": "akachi10/notes",
+      "branch": "master",
+      "token": "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",
+      "path": "pic/",
+      "customUrl": "https://raw.githubusercontent.com/akachi10/notes/master"
+    }
+  },
+  "picgoPlugins": {
+    "picgo-plugin-super-prefix": true
+  },
+  "picgo-plugin-super-prefix": {
+    "prefixFormat": "YYYY/MM/DD/",
+    "fileFormat":"HHmmss"
+  }
+}
