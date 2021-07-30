@@ -44,7 +44,7 @@
 ```shell
 # 1、安装包
 sudo yum install -y yum-utils
-# 2、用国内的仓库
+# 2、用国内的仓库y
 sudo yum-config-manager \
     --add-repo \
     http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
@@ -57,8 +57,9 @@ sudo yum install docker-ce docker-ce-cli containerd.io
 # 5、启动docker
 systemctl start docker
 # 6、使用docker version查看是否安装成功
+# 6.5、使用 docker login登陆dockerhub
 # 7、运行hello world
-docker run hello world
+docker run --rm hello-world
 # 8、查看 hello image
 ```
 
@@ -180,6 +181,15 @@ sudo systemctl restart docker
 | Hyper-V    | Hyper-V    | ---  | 微软虚拟机相当于VM |
 | PowerShell | PowerShell | ---  | 微软的shell        |
 | repository | 仓库       | ---  |                    |
+
+### 小技巧
+
+```shell
+循环命令
+i=0 ; while true ;do i=$(($i+1));sleep 1s;echo ${i};done
+```
+
+
 
 ### 命令
 
@@ -1444,7 +1454,7 @@ dockerFile就是构建docker镜像的文件。是一段命令脚本，通过脚�
 ``` shell
 # 创建一个dockerfile1 文件
 # 内容如下
-FRO M centos
+FROM centos
 
 VOLUME ["volume01","volume02"]
 
@@ -1655,7 +1665,6 @@ single command 看看有多少命令
 > 理解 
 >
 > compose是docker官方的开源项项目 需要独立安装
->
 
 `docker-compose.yml` looks like this:
 
@@ -1670,7 +1679,7 @@ services:
       - .:/code
       - logvolume01:/var/log
     links:
-      - redis
+      - redis #依赖
   redis: #redis 服务
     image: redis
 volumes:
@@ -1684,10 +1693,15 @@ volumes:
 > services= 容器
 >
 > project = 项目 一组关联的容器
+>
+> volumes:挂载 
 
 #### linux安装docker compose
 
 ```shell
+uname -a
+查看系统
+
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
 sudo chmod +x /usr/local/bin/docker-compose
@@ -1695,19 +1709,409 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 
 
+#### 体验
+
+[官方体验步骤] docs.docker.com/compose/gettingstarted/
+
+1、编写应用
+
+```shell
+import time
+
+import redis
+from flask import Flask
+
+app = Flask(__name__)
+cache = redis.Redis(host='redis', port=6379)
+
+def get_hit_count():
+    retries = 5
+    while True:
+        try:
+            return cache.incr('hits')
+        except redis.exceptions.ConnectionError as exc:
+            if retries == 0:
+                raise exc
+            retries -= 1
+            time.sleep(0.5)
+
+@app.route('/')
+def hello():
+    count = get_hit_count()
+    return 'Hello World! I have been seen {} times.\n'.format(count)
+```
+
+2、载入依赖程序
+
+```shell
+flask
+redis
+```
+
+3、编写dockerfile文件
+
+```shell
+FROM centos
+MAINTAINER akachi<zsts@hotmail.com>
+
+ENV yum -y install vim
+ENV MYPATH /usr/local
+ENV REDIS_NAME=redis
+WORKDIR $MYPATH
+
+ADD addfile/jdk-15_linux-x64_bin.tar.gz $MYPATH
+
+ADD *.jar $MYPATH/app.jar
+#ADD addfile/apache-tomcat-10.0.6.tar.gz $MYPATH
+
+ENV JAVA_HOME $MYPATH/jdk-15
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+#ENV CATALINA_HOME $MYPATH/apache-tomcat-10.0.6
+#ENV CATALINA_BASE $CATALINA_BASE
+
+ENV PATH $PATH:$JAVA_HOME/bin
+
+EXPOSE 8080
+
+# CMD startup.sh && tail -f $CATALINA_HOME/logs/catalina.out
+CMD java -jar app.jar
+```
+
+4、编写docker-compose.yml文件
+
+```shell
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+  redis:
+    image: "redis:alpine"
+```
+
+5、运行使用docker-compose up
+
+```shell
+[akachi@AKACHI-PC-2018 composetest]$ docker-compose up
+Starting composetest_redis_1 ... done
+Starting composetest_web_1   ... done
+Attaching to composetest_web_1, composetest_redis_1
+redis_1  | 1:C 07 Jul 2021 08:20:20.647 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis_1  | 1:C 07 Jul 2021 08:20:20.648 # Redis version=6.2.4, bits=64, commit=00000000, modified=0, pid=1, just started
+redis_1  | 1:C 07 Jul 2021 08:20:20.648 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+redis_1  | 1:M 07 Jul 2021 08:20:20.648 * monotonic clock: POSIX clock_gettime
+redis_1  | 1:M 07 Jul 2021 08:20:20.648 * Running mode=standalone, port=6379.
+redis_1  | 1:M 07 Jul 2021 08:20:20.648 # Server initialized
+redis_1  | 1:M 07 Jul 2021 08:20:20.648 # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+redis_1  | 1:M 07 Jul 2021 08:20:20.648 * Loading RDB produced by version 6.2.4
+redis_1  | 1:M 07 Jul 2021 08:20:20.649 * RDB age 94 seconds
+redis_1  | 1:M 07 Jul 2021 08:20:20.649 * RDB memory usage when created 0.79 Mb
+redis_1  | 1:M 07 Jul 2021 08:20:20.649 * DB loaded from disk: 0.000 seconds
+redis_1  | 1:M 07 Jul 2021 08:20:20.649 * Ready to accept connections
+web_1    |  * Serving Flask app 'app.py' (lazy loading)
+web_1    |  * Environment: production
+web_1    |    WARNING: This is a development server. Do not use it in a production deployment.
+web_1    |    Use a production WSGI server instead.
+web_1    |  * Debug mode: off
+web_1    |  * Running on all addresses.
+web_1    |    WARNING: This is a development server. Do not use it in a production deployment.
+web_1    |  * Running on http://172.18.0.3:5000/ (Press CTRL+C to quit)
+web_1    | 172.18.0.1 - - [07/Jul/2021 08:20:25] "GET / HTTP/1.1" 200 -
+```
+
+
+
+> dockercompose会做哪些事？
+>
+> 1、创建并命名进项[dirname]-[imgname]-[NUMBER]
+>
+> ​	这种设计是为了高可用性服务的
+>
+> 2、创建一个与[dirname]-default同名的网络
+>
+> 3、创建相关的镜像
+>
+> ![image-20210707163348766](C:/Users/dell/AppData/Roaming/Typora/typora-user-images/image-20210707163348766.png)
+>
+> 
+>
+> 4、启动的容器默认会绑定到新网络啊
+>
+> ![image-20210707165140898](C:/Users/dell/AppData/Roaming/Typora/typora-user-images/image-20210707165140898.png)
+>
+> 
+
+
+
+#### 停止
+
+
+
+```shell
+[akachi@AKACHI-PC-2018 composetest]$ docker-compose down
+Stopping composetest_web_1   ... done
+Stopping composetest_redis_1 ... done
+Removing composetest_web_1   ... done
+Removing composetest_redis_1 ... done
+# 使用docker-compose down 时会主动删除所有倍docker-compose创建的内容包括网络
+```
+
+
+
+#### 配置解析
+
+docker-compose.yaml
+
+> docker-compose中主要内容分为三块
+>
+> 1、指定版本、不同的版本对应不同的dockerengine，不能乱写在以下文档中会有明确介绍
+>
+> 2、配置服务
+>
+> 3、配置全局的内容包括network与、volumes
+
+
+
+
+
+> 官方文档位置
+>
+> ![image-20210707171425670](C:/Users/dell/AppData/Roaming/Typora/typora-user-images/image-20210707171425670.png)
+>
+> https://docs.docker.com/compose/compose-file/compose-file-v3/
+>
+> ![image-20210707171532591](C:/Users/dell/AppData/Roaming/Typora/typora-user-images/image-20210707171532591.png)
+
+
+
+```shell
+# 例子
+
+version: "3.9"# 版本 	
+services: #服务
+    redis: #服务1
+        image: redis:alpine #指定镜像
+        ports: #端口
+          - "6379"
+        networks: #网络
+          - frontend
+        deploy: #部署相关内容 
+          replicas: 2 #拷贝
+          update_config: #跟新内容
+            parallelism: 2 #并行
+            delay: 10s
+          restart_policy:
+            condition: on-failure
+
+    vote:
+        image: dockersamples/examplevotingapp_vote:before
+        ports:
+          - "5000:80"
+        networks:
+          - frontend
+        depends_on: #比较关键的内容 指定他们的依赖
+          - redis
+        deploy: #副本
+          replicas: 2
+          update_config:
+            parallelism: 2
+          restart_policy:
+            condition: on-failure
+
+```
+
+#### worldpress
+
+```shell
+#https://docs.docker.com/samples/wordpress/
+
+
+```
+
+```shell
+#这里有一个docker-compose.yml文件
+
+version: "3.9"
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: somewordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes:
+      - wordpress_data:/var/www/html
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+volumes:
+  db_data: {}
+  wordpress_data: {}
+  
+#使用 docker-compose up -d 可以后台运行
+```
+
+#### 写一个spring boot 复刻以下计数器
+
+
+
+![image-20210707180015756](C:/Users/dell/AppData/Roaming/Typora/typora-user-images/image-20210707180015756.png)
+
+
+
+```shell
+#1.写好计数器项目
+#2.准备文件
+[akachi@AKACHI-PC-2018 addfile]$ ls
+apache-tomcat-10.0.6.tar.gz  jdk-15_linux-x64_bin.tar.gz
+
+[akachi@AKACHI-PC-2018 composetest.bak]$ ls
+addfile StudyDockerCompose-0.0.1-SNAPSHOT.jar
+
+#3 写一个Dockerfile
+FROM centos
+MAINTAINER akachi<zsts@hotmail.com>
+
+ENV yum -y install vim
+ENV MYPATH /usr/local
+ENV REDIS_NAME=redis #指定环境变量
+WORKDIR $MYPATH
+
+ADD addfile/jdk-15_linux-x64_bin.tar.gz $MYPATH
+
+ADD *.jar $MYPATH/app.jar
+#ADD addfile/apache-tomcat-10.0.6.tar.gz $MYPATH
+
+ENV JAVA_HOME $MYPATH/jdk-15
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+#ENV CATALINA_HOME $MYPATH/apache-tomcat-10.0.6
+#ENV CATALINA_BASE $CATALINA_BASE
+
+ENV PATH $PATH:$JAVA_HOME/bin
+
+EXPOSE 8080
+
+# CMD startup.sh && tail -f $CATALINA_HOME/logs/catalina.out
+CMD java -jar app.jar
+#4 写一个docker-compose.yml
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "5000:8080"
+  redis:
+    image: "redis:alpine"
+#5 启动它 
+docker-compose up -d
+# 如果使用 docker-compose up -d --build 的话会重新打包，这样可以保证在更改后仍然可以获得最新的镜像
+
+#6 测试
+[akachi@AKACHI-PC-2018 composetest.bak]$ curl http://localhost:5000/count/getAndRefurbish
+7
+#7 结束它
+docker-compose down
+```
+
 
 
  ### Docker Swarm
 
 集群方式部署
 
+- 购买阿里云服务器
+
+### Dockers Stack
+
+```shell
+docker-compose 单机部署
+
+docker stack部署,集群部署
+
+docker-compose up -d aaa.yaml
+
+#
+
+docker stack deploy aaa.yaml
+[root@swarm01 ~]# docker stack --help
+
+Usage:  docker stack [OPTIONS] COMMAND
+
+Manage Docker stacks
+
+Options:
+      --orchestrator string   Orchestrator to use (swarm|kubernetes|all)
+
+Commands:
+  deploy      Deploy a new stack or update an existing stack
+  ls          List stacks
+  ps          List the tasks in the stack
+  rm          Remove one or more stacks
+  services    List the services in the stack
+
+Run 'docker stack COMMAND --help' for more information on a command.
+
+```
+
+
+
 ### Docker Secret
+
+```shell
+[root@swarm01 ~]# docker secret
+
+Usage:  docker secret COMMAND
+
+Manage Docker secrets
+
+Commands:
+  create      Create a secret from a file or STDIN as content
+  inspect     Display detailed information on one or more secrets
+  ls          List secrets
+  rm          Remove one or more secrets
+
+Run 'docker secret COMMAND --help' for more information on a command.
+
+```
+
+
 
 ### Docker  Config
 
-### k8s
+```shell
+[root@swarm01 ~]# docker config
 
-### GO
+Usage:  docker config COMMAND
+
+Manage Docker configs
+
+Commands:
+  create      Create a config from a file or STDIN
+  inspect     Display detailed information on one or more configs
+  ls          List configs
+  rm          Remove one or more configs
+
+Run 'docker config COMMAND --help' for more information on a command.
+
+```
+
+
 
 ### 可视化工具
 
@@ -2225,7 +2629,11 @@ docker run -d -p 8080:8080 -v /home/akachi/dockerfile/webapps:/usr/local/apache-
 
 ### Swarm 
 
+单独在
+
 ### compose 
+
+
 
 ### jenkins
 
