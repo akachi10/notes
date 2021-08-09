@@ -48,7 +48,7 @@ sudo yum install -y yum-utils
 sudo yum-config-manager \
     --add-repo \
     http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-    #https://download.docker.com/linux/centos/docker-ce.repo
+#https://download.docker.com/linux/centos/docker-ce.repo
 # 3、安装docker引擎
 # 3.1、更新索引
 yum makecache fast
@@ -1703,6 +1703,8 @@ uname -a
 查看系统
 
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+# 阿里路径
+sudo curl -L "https://get.daocloud.io/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
 sudo chmod +x /usr/local/bin/docker-compose
 ```

@@ -45,6 +45,15 @@ Run 'docker swarm COMMAND --help' for more information on a command.
 
 ## 创建swarm流程
 
+> **在这之前应该给每台机器做一个hostname**
+
+``` shell
+```
+
+
+
+
+
 > 以下的命令都可以通过--help
 
 ```shell
@@ -55,14 +64,14 @@ Swarm initialized: current node (jwmxshbfi37h95nxzdopqjc7c) is now a manager.
 
 To add a worker to this swarm, run the following command:
 
-    docker swarm join --token SWMTKN-1-3g6i2kidh816zhhdunl4pqkqhagn5qs5dvh7zmym61lmx3p3kf-00b6sdcusdfk2p6hkfm49jxsw 192.1
+docker swarm join --token SWMTKN-1-3g6i2kidh816zhhdunl4pqkqhagn5qs5dvh7zmym61lmx3p3kf-00b6sdcusdfk2p6hkfm49jxsw 192.1
 
 To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
 
 #给了我们两个命令
 # docker swarm join --token SWMTKN-1-3g6i2kidh816zhhdunl4pqkqhagn5qs5dvh7zmym61lmx3p3kf-00b6sdcusdfk2p6hkfm49jxsw 192.168.0.209:2377
 #docker swarm join-token manager
-#docker swarm join-token swarm
+#docker swarm join-token worker
 
 #2 加入一个节点
 [root@swarm02 docker]# docker swarm join --token SWMTKN-1-3g6i2kidh816zhhdunl4pqkqhagn5qs5dvh7zmym61lmx3p3kf-00b6sdcusdfk                                                                             2p6hkfm49jxsw 192.168.0.209:2377
