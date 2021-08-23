@@ -91,8 +91,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-
-
 ## docker 原理
 
 ### 调用hello时系统做了什么
@@ -506,7 +504,6 @@ Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
   
   #例子
   docker inspect 55e74d0ad3ad
-  
   [
       {
           "Id": "55e74d0ad3aded452ce53a564a62654e2da81e4ace24e8b349c7e341c65a3e8f",
@@ -714,7 +711,6 @@ Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
           }
       }
   ]
-  
   ```
 
 ##### docker exec & docker attach
@@ -773,8 +769,6 @@ Flags:
 
 Use "docker login [command] --help" for more information about a command.
 ```
-
-
 
 #### 打包命令
 
@@ -1889,7 +1883,6 @@ docker-compose.yaml
 
 ```shell
 # 例子
-
 version: "3.9"# 版本 	
 services: #服务
     redis: #服务1
@@ -1905,7 +1898,6 @@ services: #服务
             delay: 10s
           restart_policy:
             condition: on-failure
-
     vote:
         image: dockersamples/examplevotingapp_vote:before
         ports:

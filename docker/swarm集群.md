@@ -48,6 +48,7 @@ Run 'docker swarm COMMAND --help' for more information on a command.
 > **在这之前应该给每台机器做一个hostname**
 
 ``` shell
+vi /etc/hostname
 ```
 
 
@@ -93,9 +94,42 @@ To add a worker to this swarm, run the following command:
 #5 晋升一个node为manager
 #这里可以用hostname来操作
 docker node promote swarm04.my
-
-
 ```
+
+## 部署portainer Swarm
+
+> 官方网站 https://www.portainer.io/
+>
+> dockerhub https://hub.docker.com/r/portainer/portainer
+>
+> 官方启动文档 https://documentation.portainer.io/v2.0/deploy/ceinstallswarm/
+
+### 修改启动模式
+
+```shell
+[root@Docker-swarm-manager01 ~]# vi /usr/lib/systemd/system/docker.service
+# 将ExecStart修改为以下
+ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://192.168.1.146 -H fd:// --containerd=/run/containerd/containerd.sock
+# 之前少了一个sock
+# 重新加载systemctl 
+systemctl daemon-reload
+# 重启docker
+systemctl restart docker
+```
+
+### 下载YML
+
+```shell
+curl -L https://downloads.portainer.io/portainer-agent-stack.yml -o portainer-agent-stack.yml
+```
+
+### 启动stack portainer
+
+docker stack deploy -c portainer-agent-stack.yml portainer
+
+## 解决volume 挂在卷问题
+
+
 
 ## 部署应用
 
