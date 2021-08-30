@@ -236,7 +236,7 @@ k8s对于任务的访问的基本模式是,**通过controller编排和创建一�
    cat <<EOF > kubernetes.repo
    [kubernetes]
    name=Kubernetes
-   baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+   baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
    enabled=1
    gpgcheck=1
    repo_gpgcheck=1
@@ -262,5 +262,163 @@ k8s对于任务的访问的基本模式是,**通过controller编排和创建一�
 ### 部署kubernetes
 
 1. 创建 Master
-2. 加入 Kubernetes Node
+
+   ```
+   #创建配置文件
+   kubeadm config print init-defaults > init.default.yaml
+   ```
+
+   ```shell
+   vi init.default.yaml
+   #
+   apiVersion: kubeadm.k8s.io/v1beta2
+   kind: ClusterConfiguration
+   kubernetesVersion: v1.16.4
+   apiServer:
+     certSANs:    #填写所有kube-apiserver节点的hostname、IP、VIP
+     - test01.kubernetes.akachi
+     - test02.kubernetes.akachi
+     - test03.kubernetes.akachi
+     - test04.kubernetes.akachi
+     - test05.kubernetes.akachi
+     - test06.kubernetes.akachi
+     - 192.168.0.141
+     - 192.168.0.142
+     - 192.168.0.143
+     - 192.168.0.144
+     - 192.168.0.145
+     - 192.168.0.146
+   controlPlaneEndpoint: "192.168.0.131:6443"
+   networking:
+     podSubnet: "10.244.0.0/16"
+   ```
+
+   
+
+2. 创建 Master
+
+   ```shell
+   kubeadm init \
+   --apiserver-advertise-address=192.168.1.141 \
+   --image-repository registry.aliyuncs.com/google_containers \
+   --kubernetes-version v1.22.1 \
+   --service-cidr=10.96.0.0/12 \
+   --pod-network-cidr=10.244.0.0/16
+   ```
+
+   > 参数解释
+   >
+   > apiserver-advertise-address 当前服务器IP
+   >
+   > image-repository 镜像地址
+   >
+   > kubernetes-version 版本
+   >
+   > service-cidr k8s相关内容的IP
+   >
+   > pod-network相关的IP
+
+3. 加入kubernetes node
+
+#### 错误排查
+
+1. [ERROR Swap]: running with swap on is not supported. Please disable swap. 
+
+   swap没有关闭
+
+   ```shell
+   [root@test01 ~]# kubeadm init \
+   > --apiserver-advertise-address=192.168.1.141 \
+   > --image-repository registry.aliyuncs.com/google_containers \
+   > --kubernetes-version v1.22.1 \
+   > --service-cidr=10.96.0.0/12 \
+   > --pod-network-cidr=10.244.0.0/16
+   [init] Using Kubernetes version: v1.22.1
+   [preflight] Running pre-flight checks
+   error execution phase preflight: [preflight] Some fatal errors occurred:
+           [ERROR Swap]: running with swap on is not supported. Please disable swap
+   [preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+   To see the stack trace of this error execute with --v=5 or higher
+   [root@test01 ~]#
+   
+   ```
+
+   > 解决方法
+   >
+   > 1. 关掉swapoff
+   >
+   > ```shell
+   > swapoff -a
+   > ```
+   >
+   > 2. 注释掉配置
+   >
+   > ```shell
+   > vi /etc/fstab
+   > 
+   > 
+   > #/dev/mapper/centos-swap swap                    swap    defaults        0 0
+   > ```
+   >
+   > 注释掉最后一行
+   >
+   > 原因:
+   >
+   > 之前关闭了swap(虚拟内存)但是并未关闭服务
+
+2. 创建 Master时报错拉取不到镜像
+
+   [ERROR ImagePull]: failed to pull image registry.aliyuncs.com/google_containers/coredns:v1.8.4: output: Error response from daemon: manifest for registry.aliyuncs.com/google_containers/coredns:v1.8.4 not found: manifest unknown: manifest unknown
+
+   
+
+   > 报错
+   >
+   > ```shell
+   > [preflight] You can also perform this action in beforehand using 'kubeadm config images pull'
+   > error execution phase preflight: [preflight] Some fatal errors occurred:
+   >         [ERROR ImagePull]: failed to pull image registry.aliyuncs.com/google_containers/coredns:v1.8.4: output: Error response from daemon: manifest for registry.aliyuncs.com/google_containers/coredns:v1.8.4 not found: manifest unknown: manifest unknown
+   > , error: exit status 1
+   > [preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+   > To see the stack trace of this error execute with --v=5 or higher
+   > 
+   > ```
+   >
+   > 原因:拉取不到镜像
+   >
+   > ```shell
+   > registry.aliyuncs.com/google_containers/coredns不能用
+   > ```
+   >
+   > 解决方案
+   >
+   > 安装ShadowsocketR 并开启代理功能
+   >
+   > ![image-20210828204034971](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/28/204044.png)
+   >
+   > ```shell
+   > # 安装wget
+   > install wget -y
+   > vi /etc/profile
+   > #插入
+   > http_proxy=192.168.1.3:17074
+   > https_proxy=$http_proxy
+   > no_proxy=*.abc.com,10.*.*.*,192.168.*.*,*.local,localhost,127.0.0.1  ,*.akachi
+   > export http_proxy https_proxy no_proxy
+   > #内容很直白 
+   > #wge 测试谷歌能否下载下来
+   > #测试是否成功
+   > kubeadm init \
+   > --apiserver-advertise-address=192.168.1.141 \
+   > --image-repository k8s.gcr.io \
+   > --kubernetes-version v1.22.1 \
+   > --service-cidr=10.96.0.0/12 \
+   > --pod-network-cidr=10.244.0.0/16
+   > ```
+   >
+   > 
+
+3. other
+
+
 

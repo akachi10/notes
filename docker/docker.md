@@ -61,6 +61,11 @@ systemctl start docker
 # 7、运行hello world
 docker run --rm hello-world
 # 8、查看 hello image
+# 9、关闭防火墙
+systemctl stop firewalld
+systemctl disable firewalld
+sed -i 's/enforcing/disabled/' /etc/selinux/config
+setenforce 0
 ```
 
 #### 卸载
@@ -161,8 +166,171 @@ sudo systemctl restart docker
 - 自己制作一个镜像
 
   
+  
+  
 
 
+
+## IDEA docker 插件
+
+### 开启docker 的TCP控制
+
+> 查找docker.service文件位置
+
+```shell
+[root@test01 ~]# systemctl status docker
+```
+
+- windows
+
+  > 点击按钮打开TCP守护进程
+
+  ![image-20210826230121094](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/26/230130.png)
+
+- linux
+
+  > LINUX 修改/usr/lib/systemd/system/docker.service中的ExecStart参数
+  >
+  > 加入-H tcp:0.0.0.0:2375 -H  unix:///var/run/docker.sock 
+  >
+  > ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -H fd:// --containerd=/run/containerd/containerd.sock
+
+  - 重启服务
+
+    ```shell
+    [root@test01 ~]# systemctl daemon-reload
+    [root@test01 ~]# systemctl restart docker
+    ```
+
+- 测试端口
+
+  ```shell
+  telnet localhsot 2375
+  curl http://192.168.1.171:2375/version
+  ```
+
+  > 如果发现远程无法连接需要关闭防火墙
+
+### IDEA中配置
+
+- 添加连接
+
+  ![image-20210826232820767](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/26/232821.png)
+
+  > Build,Execution,Deployment>>找到Docker>>+
+
+- 打开Services
+
+  ![image-20210827005559337](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/27/005600.png)
+
+- 在Services面板中能看到docker了
+
+  ![image-20210827005750933](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/27/005752.png)
+
+- 配置镜像服务器
+
+  ![image-20210827010317261](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/27/010318.png)
+
+###  集成maven插件
+
+> 在pox.xml>properties中加入docker的前缀
+
+```shell
+<docker.image.prefix>rainbowfish</docker.image.prefix>
+```
+
+
+
+> 在pom.xml中加入一个plugins 不适用DockerFile的情况下
+
+```xml
+
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <imageName>192.168.2.129:5000/clairvoyance/listener:1.0</imageName>
+                    <baseImage>openjdk:8-jre-slim</baseImage>
+                    <maintainer>docker_maven zsts@hotmail.com</maintainer>
+                    <workdir>/ROOT</workdir>
+                    <entryPoint>["java", "-jar", "${project.build.finalName}.jar"]</entryPoint>
+                    <exposes>
+                        <expose>8080</expose>
+                    </exposes>
+                    <resources>
+                        <resource>
+                            <targetPath>/ROOT</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
+```
+
+- 编写Dockerfile
+
+  > 创建Dockerfile 到项目根路径下指定的目录下。
+
+  ```dockerfile
+  FROM openjdk:8-jre-slim
+  
+  MAINTAINER akachi zsts@hotmail.com
+  WORKDIR /ROOT
+  COPY target/listener-0.0.1-SNAPSHOT.jar app.jar
+  COPY src/main/resources/application-*.properties .
+  ENV PROFILES_ACTIVE pro
+  EXPOSE 8080
+  
+  ENTRYPOINT ["java", "-jar", "listener-*-SNAPSHOT.jar"]
+  ```
+
+  依次执行maven命令
+
+- 编写一个docker-compose.yml
+
+  ```yml
+  version: "3.0"
+  services:
+    listener:
+      image: 192.168.2.129:5000/clairvoyance/listener:1.0
+      restart: always
+      environment:
+        - PROFILES_ACTIVE=pro
+  ```
+
+  
+
+- - clean
+  - package
+  - Plugins->docker->docker:build
+
+> 解决问题:
+>
+> 1. not find database.class什么的
+>
+>    由于jdk11之后去掉了这些内容需要单独在plugin标签里加入jar包
+>
+>    ```xml
+>    <dependencies>
+>        <dependency>
+>            <groupId>javax.activation</groupId>
+>            <artifactId>activation</artifactId>
+>            <version>1.1.1</version>
+>        </dependency>
+>    </dependencies>
+>    ```
+>    
+> 2. docker 找不到文件
+>
+>    由于docker build 是将当前目录下所有内容发送给docker daemon所以不能访问上层目录。
+>
+>    解决方案，将dockerfile放到顶层。
+>
+> 3. 
+>
+> 
 
 ## 附录
 
@@ -179,6 +347,7 @@ sudo systemctl restart docker
 | Hyper-V    | Hyper-V    | ---  | 微软虚拟机相当于VM |
 | PowerShell | PowerShell | ---  | 微软的shell        |
 | repository | 仓库       | ---  |                    |
+| containers | 容器       | ---  |                    |
 
 ### 小技巧
 
@@ -360,6 +529,7 @@ Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
     	-p 容器端口
     	-p ip:port:容器端口	
   -v dir:dir 挂载卷
+  -e PROFILES_ACTIVE=com
   
   # 启动并进入容器
   [root@localhost ~]# docker run -it centos /bin/bash
@@ -750,25 +920,24 @@ Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
 
 登陆 hub docker命令
 
-```shell
-Log in to a Docker registry or cloud backend.
-If no registry server is specified, the default is defined by the daemon.
+###### 问题列表
 
-Usage:
-  docker login [OPTIONS] [SERVER] [flags]
-  docker login [command]
+- 无法使用http get 请求
 
-Available Commands:
-  azure       Log in to azure
+  ```shell
+  # 修改文件daemon.json
+  vi /etc/docker/daemon.json
+  
+  {
+  	"insecure-registries": ["192.168.2.129:5000"]
+  }
+  ```
 
-Flags:
-  -h, --help              Help for login
-  -p, --password string   password
-      --password-stdin    Take the password from stdin
-  -u, --username string   username
+  
 
-Use "docker login [command] --help" for more information about a command.
-```
+
+
+
 
 #### 打包命令
 
@@ -951,6 +1120,10 @@ connect命令的功能是连接一个容器到一个网络
 
 
 
+#### 查看docker仓库
+
+curl -XGET http://192.168.2.129:5000/v2/_catalog
+
 #### 命令备注
 
 ​	在 官网的 reference(查询) docker cli(docker客户端下有所有命令)
@@ -1097,7 +1270,7 @@ Status: Downloaded newer image for tomcat:latest
 
 > 思考: 能不能再docker环境中使用dns服务
 
-#### --link 
+#### 连接网络link 
 
 ``` shell
 [akachi@AKACHI-PC-2018 dell]$ docker run -d -P --name tomcat03 --link tomcat01 tomcat
@@ -1478,7 +1651,7 @@ docker run -it akachi/centos:1.0 /bin/bash
 
 - 常用命令
 
-  ![image-20210609154456622](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114655.png)
+  
 
   ![image-20210610135844359](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/06/21/114658.png)
 
@@ -1601,29 +1774,15 @@ drwxr-xr-x   1 root root 4096 Jun 11 09:28 ..
 2. 在服务器上提交镜像
 
    ```shell
-   Log in to a Docker registry or cloud backend.
-   If no registry server is specified, the default is defined by the daemon.
-   
-   Usage:
-     docker login [OPTIONS] [SERVER] [flags]
-     docker login [command]
-   
-   Available Commands:
-     azure       Log in to azure
-   
-   Flags:
-     -h, --help              Help for login
-     -p, --password string   password
-         --password-stdin    Take the password from stdin
-     -u, --username string   username
-   
-   Use "docker login [command] --help" for more information about a command.
+   docker login [command] --help
    ```
-
+   
 3. 登陆后提交 镜像使用 docker push
 
    ```shell
-   #注意在使用docker push 时push的镜像必须是 [本用户名]/imagename[tag]
+   #注意在使用docker push 时push的镜像必须是 [仓库名]:imagename[tag]
+   #dockerhub 的push的镜像必须是 [本用户名]/[仓库名]/imagename[tag]
+   #例子 192.168.2.129:5000/clairvoyance/listener:1.0
    docker push akachi/mytomcat:1.0
    The push refers to repository [docker.io/akachi/mytomcat]
    44793e2a4b5c: Pushed
@@ -1633,6 +1792,12 @@ drwxr-xr-x   1 root root 4096 Jun 11 09:28 ..
    1.0: digest: sha256:e7b4e3a3536c69ba9cebbef5cd3f73c4a8d68eecb4fd21a75e0dd6339aedfbf6 size: 1160
    ```
 
+#### 常用的镜像名
+
+- java:
+  - openjdk:8-jre-slim
+  - openjdk:11-jre-slim
+- 
 
 ### Docker Compose
 

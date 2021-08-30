@@ -125,7 +125,7 @@ curl -L https://downloads.portainer.io/portainer-agent-stack.yml -o portainer-ag
 
 ### 启动stack portainer
 
-docker stack deploy -c portainer-agent-stack.yml portainer
+docker stack deploy -c portainer-agent-stack.yml portainer --with-registry-auth
 
 ## 解决volume 挂在卷问题
 
