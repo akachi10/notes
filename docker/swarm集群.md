@@ -164,7 +164,37 @@ docker service create -p 2888:80 --name my-nginx nginx
 #
 ```
 
+### Dockers Stack
 
+```shell
+docker-compose 单机部署
+
+docker stack部署,集群部署
+
+docker-compose up -d aaa.yaml
+
+#
+
+docker stack deploy aaa.yaml
+[root@swarm01 ~]# docker stack --help
+
+Usage:  docker stack [OPTIONS] COMMAND
+
+Manage Docker stacks
+
+Options:
+      --orchestrator string   Orchestrator to use (swarm|kubernetes|all)
+
+Commands:
+  deploy      Deploy a new stack or update an existing stack
+  ls          List stacks
+  ps          List the tasks in the stack
+  rm          Remove one or more stacks
+  services    List the services in the stack
+
+Run 'docker stack COMMAND --help' for more information on a command.
+
+```
 
 
 

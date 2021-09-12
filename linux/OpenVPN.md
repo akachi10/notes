@@ -1,12 +1,55 @@
 # OpenVPN
 
+> 官方文档:
+>
+> https://openvpn.net/download-open-vpn/
+>
+> ![image-20210907224630819](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/09/07/224642.png)
+>
+> ![image-20210907224648232](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/09/07/224649.png)
+
+
+
+## 前置
+
+1. 需要科学上网
+
+   > 具体方请参考《网络配置》
+   >
+   > 测试下来只有全局代理能解决问题
+
 ## 安装服务
 
 ```shell
-wget http://swupdate.openvpn.org/as/openvpn-as-2.0.10-CentOS7.x86_64.rpm
-
-rpm -Uvh openvpn-as-2.0.10-CentOS7.x86_64.rpm
+yum -y install https://as-repository.openvpn.net/as-repo-centos7.rpm
+yum -y install openvpn-as
 ```
+
+### 全局代理设置
+
+> 修改文件 /etc/profile
+
+```shell
+#加入以下内容
+# add proxy for network
+export http_proxy="http://192.168.3.7:17074"
+export https_proxy=$http_proxy
+export ftp_proxy=$http_proxy
+#生效环境变量
+source /etc/profile
+```
+
+## 创建密码
+
+> 一开始会有一个admin用户但是不能登陆需要在服务器上运行
+>
+> passwd openvpn
+
+## 管理
+
+> 教程页中会有一些基本的教学
+>
+> https://openvpn.net/vpn-server-resources/finishing-configuration-of-access-server/#setting-up-authentication
 
 
 
@@ -21,35 +64,16 @@ setenforce 0
 
 ## 异常解决
 
-1. 无法启动服务
-
-   ```shell
-   Error:
-   process started and then immediately exited: ['Sat Oct 7 13:28:47 2017 Linux ifconfig failed: could not execute external program']
-   ```
-
-   - 解决方案安装net-tools
-
-     ```shell
-     yum install net-tools -y
-     ```
+如果无法连接外网可看《linux网络设置》
 
 ## 卸载
 
 ```shell
-#查看vpnservice
-[root@DNS00 OpenVPN]# rpm -qa|grep vpn
-openvpn-as-2.0.10-CentOSrelease.x86_64
-
+yum -y remove openvpn-as
+rm -rf /usr/local/openvpnas
 ```
 
-
-
-```shell
- rpm -e openvpn-as-2.0.10-CentOSrelease.x86_64
-```
-
-
+## 服务名
 
 ## 下载安装vpn客户端
 

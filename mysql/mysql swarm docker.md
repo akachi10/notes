@@ -153,6 +153,12 @@ docker stack deploy -c mysql-compose.yml rainbowfish_mysql
 
 ![这里写图片描述](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9ub3RlLnlvdWRhby5jb20veXdzL3B1YmxpYy9yZXNvdXJjZS9iZTFmYTQ4OTBkYzkyZTZlZDY1OWRiYmIzMTZmMzExMS94bWxub3RlLzlBODBFRDczRkQzRjRERDZBNUE1OTg2MjA2MkQ5QkQ5LzE0MDg)
 
+- 创建用户
+
+```shell
+GRANT REPLICATION SLAVE ON *.* to 'slave'@'%' identified by '123456';
+```
+
 - 停止同步服务(如果有)
 
 ```SQL
