@@ -77,6 +77,7 @@ npm install hexo-cli -g
 3. 初始化hexo
 
    ```shell
+   # 在某个目录下 比如 E:/DBank/blog
    $ hexo init
    INFO  Cloning hexo-starter https://github.com/hexojs/hexo-starter.git
    INFO  Install dependencies
@@ -166,4 +167,84 @@ npm install hexo-cli -g
    > 看到以下内容就是博客部署成功了
    >
    > ![image-20210831011203606](https://raw.githubusercontent.com/akachi10/notes/master/pic/2021/08/31/011214.png)
+   >
+   > 我是 访问https://artificial-deus.github.io/
 
+## 写博客
+
+> 到blog目录内
+>
+> 通过命令 hexo n "[name]"
+>
+> 文件会被创造在 source/_posts/内
+>
+> 创建的文件中有默认代码块其中包含 title、date、tags三个字段 是yml格式，不按格式写会打包失败。
+>
+> tags 是个数组或字符串，可以用于检索文章。
+>
+> 例子：
+
+```shell
+---
+title: 基于swarm集群搭建mysql主备
+date: 2021-09-12 23:00:42
+tags: 
+  - mysql
+  - swarm
+  - dokcer
+  - 容器化
+  - 高可用
+  - HA
+---
+```
+
+
+
+> 完成后执行:
+
+```shell
+# 清理
+hexo clean
+# 重新生成
+hexo g
+# 部署到github上
+hexo d
+```
+
+## 自定义主题
+
+> 在官方的主题中看到内容 [Lite](https://github.com/HeskeyBaozi/hexo-theme-lite) 主题不错
+>
+> 官方关于主题的文档中描述
+>
+
+![image-20210913010943361](Hexo搭建一个github上的博客.assets/image-20210913010943361.png)
+
+> https://github.com/HeskeyBaozi/hexo-theme-lite.git
+>
+> 下载主题![image-20210913205359022](Hexo搭建一个github上的博客.assets/image-20210913205359022.png)
+
+```shell
+E:\DBank\Blog>git clone https://github.com/HeskeyBaozi/hexo-theme-lite.git themes/lite
+Cloning into 'themes/lite'...
+remote: Enumerating objects: 2020, done.
+remote: Total 2020 (delta 0), reused 0 (delta 0), pack-reused 2020
+Receiving objects: 100% (2020/2020), 8.00 MiB | 5.43 MiB/s, done.
+Resolving deltas: 100% (1182/1182), done.
+```
+
+> 修改文档_config.yml的 theme: 为主题文件夹名称
+
+```shell
+theme: lite
+```
+
+> 修改其中EMail之类的内容
+
+### Butterfly 主题
+
+> 有些特殊设置必须基于
+
+https://butterfly.js.org/posts/dc584b87/
+
+才能用
